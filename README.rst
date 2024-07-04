@@ -9,20 +9,20 @@ Requires Factor 0.99 (should also work on 0.100).
 
 To run it yourself:
 
- - make sure you have Factor 0.99 installed
+- make sure you have Factor 0.99 installed
 
- - clone this repo to one of your vocabulary roots (if you don't know what that
-   is you probably want it in the `work` folder in your Factor install
-   directory)
+- clone this repo to one of your vocabulary roots (if you don't know what that
+  is you probably want it in the `work` folder in your Factor install
+  directory)
 
- - copy the contents of ``sample-config`` directory to the ``config`` directory
-   and fill out the data in ``config.factor`` with your bot's credentials
+- copy the contents of ``sample-config`` directory to the ``config`` directory
+  and fill out the data in ``config.factor`` with your bot's credentials
 
- - figure out a way to execute the ``ensure-mycelium-db`` word from the
-   ``mycelium.db`` vocab somehow. This doesn't need the discord bot to be
-   running so you can do this even from the listener
+- figure out a way to execute the ``ensure-mycelium-db`` word from the
+  ``mycelium.db`` vocab somehow. This doesn't need the discord bot to be
+  running so you can do this even from the listener
 
- - execute `factor -run=mycelium`
+- execute `factor -run=mycelium`
 
 You may also try using Factor deploy functionality to compile it to a standalone
 binary, but the bot uses a lot of functionality that you normally want to strip
