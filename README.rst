@@ -3,7 +3,7 @@
 ================================================================================
 
 
-A personal discord bot by and for olus2000, written in Factor.
+A personal discord bot by and for olus2000, written in `Factor`_.
 
 Requires Factor 0.99 (should also work on 0.100).
 
@@ -22,13 +22,16 @@ To run it yourself:
   ``mycelium.db`` vocab somehow. This doesn't need the discord bot to be
   running so you can do this even from the listener
 
-- execute `factor -run=mycelium`
+- execute ``factor -run=mycelium``
 
 You may also try using Factor deploy functionality to compile it to a standalone
 binary, but the bot uses a lot of functionality that you normally want to strip
 away, like prettyprinting. The `eval` functionality relies on the parser and
 vocabs being available at runtime, so that will just straight up not work in a
 deployed binary.
+
+
+.. _Factor: https://factorcode.org/
 
 
 Functionality
