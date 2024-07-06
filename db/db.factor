@@ -21,7 +21,7 @@ TUPLE: interaction message-id response-id last-access type ;
 
 interaction "INTERACTION"
 { { "message-id" "MESSAGE_ID" VARCHAR +user-assigned-id+ }
-  { "response-id" "RESPONSE_ID" VARCHAR +unique+ +not-null+ }
+  { "response-id" "RESPONSE_ID" VARCHAR }
   { "last-access" "LAST_ACCESS" TIMESTAMP +not-null+ }
   { "type" "TYPE" INTEGER +not-null+ } } define-persistent
 

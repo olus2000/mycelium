@@ -23,30 +23,27 @@ Replies with help on a given command. Avaliable commands:
 ]]
 
 
-: handle-help ( command -- reponse sender )
+: handle-help ( command -- reponse? )
   split-words harvest [ help-help ]
   [ first
     { { "echo" [ echo-help ] }
       { "help" [ help-help ] }
       { "roll" [ roll-help ] }
-      [ drop help-help ] } case ] if-empty
-  [ response-message ] ;
+      [ drop help-help ] } case ] if-empty ;
 
 
-: handle-command ( command -- response sender )
+: handle-command ( command -- response? )
   ":" ?head
-  [ { { [ "echo" ?head ] [ [ interaction-message ] ] }
+  [ { { [ "echo" ?head ] [ ] }
       { [ "help" ?head ] [ handle-help ] }
       { [ "roll" ?head ] [ handle-roll ] }
       { [ "3" ?head ]
-        [ drop [ ":>" [ reply-message ] ]
-          [ "" [ drop ] ] if-admin ] }
+        [ drop [ ":>" ] [ f ] if-admin ] }
       { [ ">" ?head ]
-        [ drop [ ":3" [ reply-message ] ]
-          [ "" [ drop ] ] if-admin ] }
+        [ drop [ ":3" ] [ f ] if-admin ] }
       { [ "```" ?head ] [ handle-``` ] }
-      [ drop "" [ drop ] ] } cond ]
-  [ drop "" [ drop ] ] if ;
+      [ drop f ] } cond ]
+  [ drop f ] if ;
 
 
 GENERIC: mycelium-handler ( json opcode -- )
@@ -55,7 +52,8 @@ M: object mycelium-handler 2drop ;
 
 M: MESSAGE_CREATE mycelium-handler
   drop dup "author" of "bot" of [ drop ]
-  [ "content" of [ handle-command over g... call( response -- ) ]
+  [ "content" of
+    [ handle-command [ interaction-message ] when* ]
     [ [ print-error ] with-global drop ] recover ] if ;
 
 M: MESSAGE_DELETE mycelium-handler
@@ -63,8 +61,10 @@ M: MESSAGE_DELETE mycelium-handler
   [ select-tuple ] with-mycelium-db
   [ dup [ delete-tuples ] with-mycelium-db
     [ "channel_id" of ] [ response-id>> ] bi*
-    "/channels/%s/messages/%s" sprintf
-    discord-delete-request http-request 2drop ]
+    [ "/channels/%s/messages/%s" sprintf
+!     discord-delete-request ! This was added in 0.100
+      "DELETE" <discord-request> http-request 2drop ]
+    [ drop ] if* ]
   [ drop ] if* ;
 
 

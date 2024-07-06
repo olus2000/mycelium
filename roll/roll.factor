@@ -72,5 +72,5 @@ PEG: parse-roll ( string -- dices )
   [ append ] keep over length 2000 > [ nip ] [ drop ] if ;
 
 
-: handle-roll ( message -- response sender )
+: handle-roll ( message -- response? )
   [ parse-roll run-roll ] try-handle-with ;

@@ -1,7 +1,7 @@
 ! Copyright (C) 2024 Aleksander Sabak.
 ! See https://factorcode.org/license.txt for BSD license.
 USING: discord ;
-IN: mycelium.sample-config
+IN: mycelium.config
 
 
 CONSTANT: mycelium-config

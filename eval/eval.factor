@@ -30,11 +30,11 @@ CONSTANT: mycelium-vocabs
     "mycelium.eval" "mycelium.roll" "mycelium" }
 
 
-: handle-``` ( command -- response sender )
+: handle-``` ( command -- response? )
   [ [ [ eval-vocabs [ use-vocab ] each
         mycelium-vocabs [ use-vocab ] each
         [ 3 head* ( -- ) (eval) ] with-`` ] with-file-vocabs ]
     try-handle-with ]
-  [ drop "" [ drop ] ] if-admin ;
+  [ drop f ] if-admin ;
 
 
