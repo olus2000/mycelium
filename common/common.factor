@@ -88,7 +88,7 @@ CONSTANT: MAX-MESSAGE-SIZE 2000
       [ response-message* dup "id" of ] }
     { [ dup length MAX-FILE-SIZE <= ]
       [ response-file* dup "id" of ] } } cond
-  discord-bot get last-message>> "id" of 0 <interaction>
+  discord-bot get last-message>> "id" of swap 0 <interaction>
   [ insert-tuple ] with-mycelium-db ;
 
 : interaction-message ( string -- )
