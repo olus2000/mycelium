@@ -3,7 +3,8 @@
 USING: accessors assocs combinators continuations db.tuples
 debugger discord formatting http.client kernel multiline
 mycelium.common mycelium.config mycelium.db mycelium.eval
-mycelium.roll namespaces sequences splitting threads ;
+mycelium.netrunner mycelium.roll namespaces sequences splitting
+threads ;
 IN: mycelium
 
 
@@ -29,6 +30,7 @@ Replies with help on a given command. Avaliable commands:
     { { "echo" [ echo-help ] }
       { "help" [ help-help ] }
       { "roll" [ roll-help ] }
+      { "card" [ card-help ] }
       [ drop help-help ] } case ] if-empty ;
 
 
@@ -37,6 +39,7 @@ Replies with help on a given command. Avaliable commands:
   [ { { [ "echo" ?head ] [ ] }
       { [ "help" ?head ] [ handle-help ] }
       { [ "roll" ?head ] [ handle-roll ] }
+      { [ "card" ?head ] [ handle-card ] }
       { [ "3" ?head ]
         [ drop [ ":>" ] [ f ] if-admin ] }
       { [ ">" ?head ]
