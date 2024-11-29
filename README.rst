@@ -5,11 +5,11 @@
 
 A personal discord bot by and for olus2000, written in `Factor`_.
 
-Requires Factor 0.99 (should also work on 0.100).
+Requires Factor 0.100 (should also work on 0.101).
 
 To run it yourself:
 
-- make sure you have Factor 0.99 installed
+- make sure you have Factor 0.100 installed
 
 - clone this repo to one of your vocabulary roots (if you don't know what that
   is you probably want it in the `work` folder in your Factor install

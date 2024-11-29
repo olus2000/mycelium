@@ -1,9 +1,9 @@
 ! Copyright (C) 2024 Aleksander Sabak.
 ! See https://factorcode.org/license.txt for BSD license.
-USING: accessors arrays assocs combinators continuations
-db.tuples debugger discord formatting hashtables http
-http.client io.streams.string kernel literals math math.parser
-multiline mycelium.db namespaces splitting sequences
+USING: accessors arrays assocs assocs.extras combinators
+continuations db.tuples debugger discord formatting hashtables
+http http.client io.streams.string kernel literals math
+math.parser multiline mycelium.db namespaces splitting sequences
 sequences.extras ;
 IN: mycelium.common
 

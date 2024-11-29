@@ -62,8 +62,7 @@ M: MESSAGE_DELETE mycelium-handler
   [ dup [ delete-tuples ] with-mycelium-db
     [ "channel_id" of ] [ response-id>> ] bi*
     [ "/channels/%s/messages/%s" sprintf
-!     discord-delete-request ! This was added in 0.100
-      "DELETE" <discord-request> http-request 2drop ]
+      discord-delete-request http-request 2drop ]
     [ drop ] if* ]
   [ drop ] if* ;
 
