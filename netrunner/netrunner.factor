@@ -29,6 +29,6 @@ URL"https://api-preview.netrunnerdb.com/api/v3/public/printings?filter[distinct_
     "large" of ] if-empty ;
 
 
-: handle-card ( message -- response? )
-  [ >nrdb-search-url http-get-json nip ?json>card-image ]
+: handle-card ( user message -- response? )
+  nip [ >nrdb-search-url http-get-json nip ?json>card-image ]
   try-handle-with ;

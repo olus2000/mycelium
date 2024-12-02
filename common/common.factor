@@ -3,17 +3,20 @@
 USING: accessors arrays assocs assocs.extras combinators
 continuations db.tuples debugger discord formatting hashtables
 http http.client io.streams.string kernel literals math
-math.parser multiline mycelium.db namespaces splitting sequences
-sequences.extras ;
+math.parser multiline mycelium.db namespaces sets sequences
+sequences.extras splitting ;
 IN: mycelium.common
+
+
+CONSTANT: EPHEMERAL $[ 1 6 shift ]
 
 
 ERROR: mycelium-error message ;
 
 
 : if-admin
-  ( ..A then: ( ..A -- ..B ) else: ( ..A -- ..B ) -- ..B )
-  discord-bot get last-message>> obey-message? -rot if ; inline
+  ( ..A user then: ( ..A -- ..B ) else: ( ..A -- ..B ) -- ..B )
+  [ discord-bot get config>> obey-names>> in? ] 2dip if ; inline
 
 
 : <discord-request> ( path method -- request )
@@ -82,12 +85,17 @@ Content-Type: application/json
 CONSTANT: MAX-FILE-SIZE $[ 1024 1024 25 * * ]
 CONSTANT: MAX-MESSAGE-SIZE 2000
 
-: interaction-message* ( string -- json )
-  { { [ dup empty? ] [ drop response-react f f ] }
+
+: sized-message* ( nonempty-string -- json )
+  { { [ dup empty? ] [ drop response-react f ] }
     { [ dup length MAX-MESSAGE-SIZE <= ]
-      [ response-message* dup "id" of ] }
+      [ response-message* ] }
     { [ dup length MAX-FILE-SIZE <= ]
-      [ response-file* dup "id" of ] } } cond
+      [ response-file* ] } } cond ;
+
+
+: interaction-message* ( string -- json )
+  sized-message* dup "id" of
   discord-bot get last-message>> "id" of swap 0 <interaction>
   [ insert-tuple ] with-mycelium-db ;
 

@@ -48,6 +48,12 @@ It currently supports five-ish commands prefixed by ``:``:
   of the rolls. ``<dice>`` can be multiple space-separated dice specifiers in
   the ``XdY`` format (indicating rolling a ``Y``-sided die ``X`` times).
 
+``:card <name>``
+  Fetches a card from the `netrunnerdb.com API`_ according to the query in
+  ``<name>`` and responds with the link to that card's image or an error
+  message. The query can be an arbitrary printing search query, but it will only
+  return at most one card anyway so it's most useful with specific card names.
+
 ``:echo <message>``
   A test command. The bot should respond with ``<message>``.
 
@@ -62,3 +68,5 @@ It currently supports five-ish commands prefixed by ``:``:
   bot administration and maintenance. **WARNING:** this command will execute on
   your machine with full access and all the context of your discord bot. You can
   break your machine or leak your bot's token using it.
+
+.. _netrunnerdb.com API: https://api-preview.netrunnerdb.com/api/docs/#cards-filter___card_search_operator

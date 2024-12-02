@@ -27,10 +27,11 @@ CONSTANT: eval-vocabs
 ! Important to keep these in order in which they can be reloaded
 CONSTANT: mycelium-vocabs
   { "mycelium.config" "mycelium.db" "mycelium.common"
-    "mycelium.eval" "mycelium.roll" "mycelium" }
+    "mycelium.eval" "mycelium.roll" "mycelium.netrunner" "mycelium" }
 
 
-: handle-``` ( command -- response? )
+: handle-``` ( user command -- response? )
+  swap
   [ [ [ eval-vocabs [ use-vocab ] each
         mycelium-vocabs [ use-vocab ] each
         [ 3 head* ( -- ) (eval) ] with-`` ] with-file-vocabs ]
