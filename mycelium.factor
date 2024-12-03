@@ -33,8 +33,8 @@ Replies with help on a given command. Avaliable commands:
 ]]
 
 
-: handle-help ( user command -- reponse? )
-  nip split-words harvest [ help-help ]
+: handle-help ( command -- reponse? )
+  split-words harvest [ help-help ]
   [ first
     { { "echo" [ echo-help ] }
       { "help" [ help-help ] }
@@ -43,9 +43,9 @@ Replies with help on a given command. Avaliable commands:
       [ drop help-help ] } case ] if-empty ;
 
 
-: handle-command ( user command -- response? )
+: handle-command ( command -- response? )
   ":" ?head
-  [ { { [ "echo" ?head ] [ nip ] }
+  [ { { [ "echo" ?head ] [ ] }
       { [ "help" ?head ] [ handle-help ] }
       { [ "roll" ?head ] [ handle-roll ] }
       { [ "card" ?head ] [ handle-card ] }
@@ -54,8 +54,8 @@ Replies with help on a given command. Avaliable commands:
       { [ ">" ?head ]
         [ drop [ ":3" ] [ f ] if-admin ] }
       { [ "```" ?head ] [ handle-``` ] }
-      [ 2drop f ] } cond ]
-  [ 2drop f ] if ;
+      [ drop f ] } cond ]
+  [ drop f ] if ;
 
 
 GENERIC: mycelium-handler ( json opcode -- )
@@ -63,13 +63,15 @@ GENERIC: mycelium-handler ( json opcode -- )
 M: object mycelium-handler 2drop ;
 
 M: MESSAGE_CREATE mycelium-handler
-  drop dup "author" of dup "bot" of [ 2drop ]
-  [ "username" of swap "content" of
+  last-opcode set
+  dup "author" of "bot" of [ drop ]
+  [ "content" of
     [ handle-command [ interaction-message ] when* ]
-    [ [ print-error ] with-global 2drop ] recover ] if ;
+    [ [ print-error ] with-global drop ] recover ] if ;
 
 M: MESSAGE_DELETE mycelium-handler
-  drop interaction new over "id" of >>message-id
+  last-opcode set
+  interaction new over "id" of >>message-id
   [ select-tuple ] with-mycelium-db
   [ dup [ delete-tuples ] with-mycelium-db
     [ "channel_id" of ] [ response-id>> ] bi*
@@ -79,20 +81,16 @@ M: MESSAGE_DELETE mycelium-handler
   [ drop ] if* ;
 
 M: INTERACTION_CREATE mycelium-handler
+  last-opcode set
   ! Instantly respond to the interaction with loading
-  drop dup [ "id" of ] [ "token" of ] bi
+  dup [ "id" of ] [ "token" of ] bi
   "/interactions/%s/%s/callback" sprintf
   H{ { "type" 5 } } >json swap
   discord-post-request add-json-header http-request 2drop
   ! Actually calculate the interaction response
-  [ [ "member" of ] keep or "user" of "username" of ]
-  [ "data" of "resolved" of "messages" of values first
-    "content" of ] bi handle-command 'H{ { "content" _ } }
-  ! Edit the response to include the actual content
-  discord-bot-config get application-id>>
-  discord-bot get last-message>> "token" of
-  "/webhooks/%s/%s/messages/@original" sprintf
-  discord-patch-json drop ;
+  "data" of "resolved" of "messages" of values first
+  "content" of handle-command "Unrecognised command" or
+  sized-message* drop ;
 
 
 : run-mycelium ( -- )

@@ -30,8 +30,7 @@ CONSTANT: mycelium-vocabs
     "mycelium.eval" "mycelium.roll" "mycelium.netrunner" "mycelium" }
 
 
-: handle-``` ( user command -- response? )
-  swap
+: handle-``` ( command -- response? )
   [ [ [ eval-vocabs [ use-vocab ] each
         mycelium-vocabs [ use-vocab ] each
         [ 3 head* ( -- ) (eval) ] with-`` ] with-file-vocabs ]
