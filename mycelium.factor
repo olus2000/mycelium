@@ -30,6 +30,8 @@ Replies with help on a given command. Avaliable commands:
 * echo - echo
 * roll - rolls dice
 * card - displays netrunner cards
+
+Source code at https://app.radicle.xyz/nodes/rad.olus2000.pl/rad:z3pVzPpMbSQj4xtbnn4vpZbNnHQf9
 ]]
 
 
@@ -66,12 +68,12 @@ M: MESSAGE_CREATE mycelium-handler
   last-opcode set
   dup "author" of "bot" of [ drop ]
   [ "content" of
-    [ handle-command [ interaction-message ] when* ]
+    [ handle-command [ response-message ] when* ]
     [ [ print-error ] with-global drop ] recover ] if ;
 
 M: MESSAGE_DELETE mycelium-handler
   last-opcode set
-  interaction new over "id" of >>message-id
+  command-response new over "id" of >>message-id
   [ select-tuple ] with-mycelium-db
   [ dup [ delete-tuples ] with-mycelium-db
     [ "channel_id" of ] [ response-id>> ] bi*
@@ -80,17 +82,34 @@ M: MESSAGE_DELETE mycelium-handler
     [ drop ] if* ]
   [ drop ] if* ;
 
-M: INTERACTION_CREATE mycelium-handler
-  last-opcode set
+
+: application-command-handler ( json -- )
   ! Instantly respond to the interaction with loading
   dup [ "id" of ] [ "token" of ] bi
   "/interactions/%s/%s/callback" sprintf
-  H{ { "type" 5 } } >json swap
+  H{ { "type" 5 }
+     { "data" H{ { "flags" $ EPHEMERAL } } } } >json swap
   discord-post-request add-json-header http-request 2drop
   ! Actually calculate the interaction response
   "data" of "resolved" of "messages" of values first
   "content" of handle-command "Unrecognised command" or
   sized-message* drop ;
+
+
+: message-component-handler ( json -- )
+  [ "message" of [ "attachments" of ?first "url" of ]
+    [ "content" of ] bi or
+    'H{ { "content" _ } }
+    'H{ { "type" 4 } { "data" _ } } >json ]
+  [ [ "id" of ] [ "token" of ] bi
+    "/interactions/%s/%s/callback" sprintf ] bi
+  discord-post-request add-json-header http-request 2drop ;
+
+
+M: INTERACTION_CREATE mycelium-handler
+  last-opcode set dup "type" of
+  { { 2 [ application-command-handler ] }
+    { 3 [ message-component-handler ] } } case ;
 
 
 : run-mycelium ( -- )

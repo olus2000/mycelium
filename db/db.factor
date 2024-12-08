@@ -13,13 +13,13 @@ CONSTANT: mycelium-db-path
   mycelium-db-path <sqlite-db> swap with-db ; inline
 
 
-TUPLE: interaction message-id response-id last-access type ;
+TUPLE: command-response message-id response-id last-access type ;
 
-: <interaction> ( message-id response-id type -- interaction )
-  now swap interaction boa ;
+: <command-response> ( message-id response-id type -- response )
+  now swap command-response boa ;
 
 
-interaction "INTERACTION"
+command-response "RESPONSE"
 { { "message-id" "MESSAGE_ID" VARCHAR +user-assigned-id+ }
   { "response-id" "RESPONSE_ID" VARCHAR }
   { "last-access" "LAST_ACCESS" TIMESTAMP +not-null+ }
@@ -27,7 +27,7 @@ interaction "INTERACTION"
 
 
 CONSTANT: mycelium-tables
-  { interaction }
+  { command-response }
 
 
 : ensure-mycelium-db ( -- )

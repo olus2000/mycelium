@@ -2,7 +2,7 @@
 ! See https://factorcode.org/license.txt for BSD license.
 USING: accessors arrays assocs assocs.extras combinators
 continuations db.tuples debugger discord formatting hashtables
-http http.client io.streams.string kernel literals math
+http http.client io.streams.string json kernel literals math
 math.parser multiline mycelium.db namespaces sets sequences
 sequences.extras splitting ;
 IN: mycelium.common
@@ -46,9 +46,19 @@ M: INTERACTION_CREATE authored-by-admin?
   "content" associate
   "allowed_mentions" H{ } set-of ;
 
-HOOK: response-message* last-opcode ( string -- json )
+: add-button ( hashtable -- hashtable' )
+  discord-bot get last-message>> "id" of
+  'H{ { "type" 2 }
+      { "style" 2 }
+      { "label" "Show" }
+      { "custom_id" _ } } 1array
+  'H{ { "type" 1 }
+      { "components" _ } } 1array
+  "components" swap set-of ;
 
-M: MESSAGE_CREATE response-message*
+HOOK: result-message* last-opcode ( string -- json )
+
+M: MESSAGE_CREATE result-message*
   message-payload-base
   discord-bot get last-message>>
   [ "id" of "message_id" associate
@@ -56,26 +66,26 @@ M: MESSAGE_CREATE response-message*
   [ "channel_id" of ] bi
   "/channels/%s/messages" sprintf discord-post-json ;
 
-M: INTERACTION_CREATE response-message*
-  message-payload-base
+M: INTERACTION_CREATE result-message*
+  message-payload-base add-button
   discord-bot-config get application-id>>
   discord-bot get last-message>> "token" of
   "/webhooks/%s/%s/messages/@original" sprintf
   discord-patch-json ;
 
-: response-message ( string -- ) response-message* drop ;
+: result-message ( string -- ) result-message* drop ;
 
 
-HOOK: response-empty last-opcode ( -- )
+HOOK: result-empty last-opcode ( -- )
 
-M: MESSAGE_CREATE response-empty
+M: MESSAGE_CREATE result-empty
   discord-bot get last-message>>
   [ "channel_id" of ] [ "id" of ] bi
   "/channels/%s/messages/%s/reactions/%%F0%%9F%%91%%8D/@me"
   sprintf "PUT" <discord-request> http-request 2drop ;
 
-M: INTERACTION_CREATE response-empty
-  "No output" response-message ;
+M: INTERACTION_CREATE result-empty
+  "No output" result-message ;
 
 
 : find-boundary ( message -- boundary )
@@ -84,38 +94,23 @@ M: INTERACTION_CREATE response-empty
   41 >base ;
 
 CONSTANT: file-form-data [[
-Content-Disposition: form-data; name="files[0]"; filename="response.txt"
+Content-Disposition: form-data; name="files[0]";filename="result.txt"
 Content-Type: text/plain; charset="UTF-8"
 
 ]]
 
-CONSTANT: (attachment-form-data-message) [[
+CONSTANT: attachment-form-data [[
 Content-Disposition: form-data; name="payload_json"
 Content-Type: application/json
 
-{"attachments":[{"id":0}],"message_reference":{"message_id":"%s"},"allowed_mentions":{}}
+%s
 --]]
 
-CONSTANT: (attachment-form-data-interaction) [[
-Content-Disposition: form-data; name="payload_json"
-Content-Type: application/json
 
-{"attachments":[{"id":0}],"allowed_mentions":{}}
---]]
-
-HOOK: attachment-form-data last-opcode ( -- string )
-
-M: MESSAGE_CREATE attachment-form-data
-  discord-bot get last-message>> "id" of
-  (attachment-form-data-message) sprintf ;
-
-M: INTERACTION_CREATE attachment-form-data
-  (attachment-form-data-interaction) ;
-
-: message>multipart-form ( message -- payload boundary )
-  dup find-boundary
-  [ file-form-data "\n--" surround
-    "--" attachment-form-data rot "--\n" 4array ]
+: message>multipart-form ( content json -- payload boundary )
+  >json over find-boundary
+  [ [ file-form-data "\n--" surround "--" ] dip
+    attachment-form-data sprintf rot "--\n" 4array ]
   dip [ join ] keep ;
 
 
@@ -123,15 +118,21 @@ M: INTERACTION_CREATE attachment-form-data
   "multipart/form-data; boundary=\"%s\"" sprintf
   "Content-Type" set-header ;
 
-HOOK: response-file* last-opcode ( message -- json )
+HOOK: result-file* last-opcode ( message -- json )
 
-M: MESSAGE_CREATE response-file*
+
+M: MESSAGE_CREATE result-file*
+  discord-bot get last-message>> tuck "id" of
+  'H{ { "message_id" _ } }
+  'H{ { "attachments" { H{ { "id" 0 } } } }
+      { "message_reference" _ } }
   message>multipart-form
-  discord-bot get last-message>> "channel_id" of
+  rot "channel_id" of
   "/channels/%s/messages" sprintf "POST" <discord-request>
   swap add-multipart-header swap >>post-data json-request ;
 
-M: INTERACTION_CREATE response-file*
+M: INTERACTION_CREATE result-file*
+  H{ { "attachments" { H{ { "id" 0 } } } } } clone add-button
   message>multipart-form
   discord-bot-config get application-id>>
   discord-bot get last-message>> "token" of
@@ -145,24 +146,23 @@ CONSTANT: MAX-MESSAGE-SIZE 2000
 
 
 : sized-message* ( nonempty-string -- json )
-  { { [ dup empty? ] [ drop response-empty f ] }
+  { { [ dup empty? ] [ drop result-empty f ] }
     { [ dup length MAX-MESSAGE-SIZE <= ]
-      [ response-message* ] }
+      [ result-message* ] }
     { [ dup length MAX-FILE-SIZE <= ]
-      [ response-file* ] } } cond ;
+      [ result-file* ] } } cond ;
 
 
-: interaction-message* ( string -- json )
+: response-message* ( string -- json )
   sized-message* dup "id" of
-  discord-bot get last-message>> "id" of swap 0 <interaction>
-  [ insert-tuple ] with-mycelium-db ;
+  discord-bot get last-message>> "id" of swap 0
+  <command-response> [ insert-tuple ] with-mycelium-db ;
 
-: interaction-message ( string -- )
-  interaction-message* drop ;
+: response-message ( string -- ) response-message* drop ;
 
 
 : try-handle-with
-  ( ... command quot: ( ... command -- ... response )
-  -- ... response? )
+  ( ... command quot: ( ... command -- ... result )
+  -- ... result? )
   [ [ print-error ] with-string-writer
     "```\n" dup surround nip ] recover ; inline
